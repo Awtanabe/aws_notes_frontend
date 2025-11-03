@@ -23,7 +23,7 @@ export default function Home() {
   const fetchPosts = async () => {
     try {
       setLoading(true)
-      const response = await fetch('http://http://18.181.170.29:8080/api/posts')
+      const response = await fetch('http://18.181.170.29:8080/api/posts')
       if (!response.ok) {
         throw new Error('Failed to fetch posts')
       }
