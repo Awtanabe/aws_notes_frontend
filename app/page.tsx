@@ -1,10 +1,10 @@
 import { Post } from '@/types/post'
 
-const BACKEND_URL = process.env.BACKEND_API_URL || 'http://backend:8080';
+const PUBLIC_URL = process.env.NEXT_PUBLIC_URL || 'http://backend:8080';
 
 async function getPosts(): Promise<Post[]> {
   try {
-    const response = await fetch(`${BACKEND_URL}/api/posts`, {
+    const response = await fetch(`${PUBLIC_URL}/api/posts`, {
       cache: 'no-store', // SSRで常に最新データを取得
     });
 
