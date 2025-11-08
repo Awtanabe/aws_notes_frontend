@@ -1,52 +1,38 @@
-'use client'
+import { Post } from '@/types/post'
 
-import { useEffect, useState } from 'react'
+const BACKEND_URL = process.env.BACKEND_API_URL || 'http://backend:8080';
 
-interface Post {
-  id: number
-  title: string
-  content: string
-  image_url: string
-  created_at: string
-  updated_at: string
+async function getPosts(): Promise<Post[]> {
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/posts`, {
+      cache: 'no-store', // SSRで常に最新データを取得
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch posts');
+    }
+
+    const posts = await response.json();
+    return posts || [];
+  } catch (error) {
+    console.error('Failed to fetch posts:', error);
+    return [];
+  }
 }
 
-export default function Home() {
-  const [posts, setPosts] = useState<Post[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('ja-JP', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
 
-  useEffect(() => {
-    fetchPosts()
-  }, [])
-
-  const fetchPosts = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch('http://aws-notes-alb-981637013.ap-northeast-1.elb.amazonaws.com/api/posts')
-      if (!response.ok) {
-        throw new Error('Failed to fetch posts')
-      }
-      const data = await response.json()
-      setPosts(data || [])
-      setError(null)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+export default async function Home() {
+  const posts = await getPosts()
 
   return (
     <div className="container">
@@ -54,38 +40,28 @@ export default function Home() {
         <h1>ブログ</h1>
       </div>
 
-      {error && (
-        <div className="error">
-          エラー: {error}
-        </div>
-      )}
-
-      {loading ? (
-        <div className="loading">読み込み中...</div>
-      ) : (
-        <div className="posts-list">
-          {posts.length === 0 ? (
-            <div className="loading">投稿がありません</div>
-          ) : (
-            posts.map((post) => (
-              <div key={post.id} className="post-card">
-                {post.image_url && (
-                  <img
-                    src={post.image_url}
-                    alt={post.title}
-                    className="post-image"
-                  />
-                )}
-                <h2 className="post-title">{post.title}</h2>
-                <p className="post-content">{post.content}</p>
-                <p className="post-date">
-                  投稿日: {formatDate(post.created_at)}
-                </p>
-              </div>
-            ))
-          )}
-        </div>
-      )}
+      <div className="posts-list">
+        {posts.length === 0 ? (
+          <div className="loading">投稿がありません</div>
+        ) : (
+          posts.map((post) => (
+            <div key={post.id} className="post-card">
+              {post.image_url && (
+                <img
+                  src={post.image_url}
+                  alt={post.title}
+                  className="post-image"
+                />
+              )}
+              <h2 className="post-title">{post.title}</h2>
+              <p className="post-content">{post.content}</p>
+              <p className="post-date">
+                投稿日: {formatDate(post.created_at)}
+              </p>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   )
 }
